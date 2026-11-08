@@ -34,6 +34,10 @@ his PixelOS 17 build without wiping data.
   `libprotobuf-cpp-{full,lite}-3.9.1-vendorcompat` no longer exist. Removed from `device.mk` PRODUCT_PACKAGES
   and as `shared_libs` of the prebuilt modules in `vendor/xiaomi/chime/Android.bp`. The blobs ship
   `libprotobuf-cpp-{full,lite}-3.9.1.so` themselves, so nothing is missing at runtime.
+- **per_boot_file sepolicy.** AOSP declares `per_boot_file` in `system/sepolicy/private` since 24.0, and
+  vendor policy cannot see system-private types. Removed the tree's own declaration and every vendor
+  reference (init/kernel/toolbox allows, file_contexts) — the system policy manages `/data/per_boot` on
+  its own now.
 - **HIDL IR HAL.** Android 17 removed `android.hardware.ir@1.0-impl` / `-service` from AOSP; the blobs only
   carry the legacy `consumerir.bengal.so`. Dropped both modules and the vintf manifest declaration.
   **Known limitation: the IR blaster is offline** until an AIDL ConsumerIr HAL over the legacy lib is ported.

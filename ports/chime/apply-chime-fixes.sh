@@ -28,7 +28,27 @@ if 'vendorcompat' in s:
     open(p, 'w').write(s)
     print('vendor Android.bp: protobuf vendorcompat deps removed')
 
-# 2) Android 17 removed the HIDL IR HAL; the blobs only carry the legacy consumerir.bengal.so.
+# 2) per_boot_file: AOSP declares it in system/sepolicy/private since 24.0, and vendor policy cannot
+#    see system-private types. Drop the tree's own declaration and every vendor reference — the system
+#    policy manages /data/per_boot (labeling and init access) on its own now.
+p = D + 'sepolicy/vendor/file.te'
+s = open(p).read()
+if 'type per_boot_file' in s:
+    s = '\n'.join(l for l in s.splitlines()
+                  if not l.startswith('type per_boot_file,')) + '\n'
+    open(p, 'w').write(s)
+    print('vendor file.te: duplicate per_boot_file declaration removed')
+for p in (D + 'sepolicy/vendor/init.te',
+          D + 'sepolicy/vendor/kernel.te',
+          D + 'sepolicy/vendor/toolbox.te',
+          D + 'sepolicy/vendor/file_contexts'):
+    s = open(p).read()
+    if 'per_boot_file' in s:
+        s = '\n'.join(l for l in s.splitlines() if 'per_boot_file' not in l) + '\n'
+        open(p, 'w').write(s)
+        print('vendor sepolicy: per_boot_file reference removed: ' + p.split('/')[-1])
+
+# 3) Android 17 removed the HIDL IR HAL; the blobs only carry the legacy consumerir.bengal.so.
 p = D + 'device.mk'
 s = open(p).read()
 if 'android.hardware.ir@1.0-impl' in s:
